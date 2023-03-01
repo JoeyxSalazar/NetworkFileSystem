@@ -1,9 +1,0 @@
-Welcome! Please use the following commands to navigate your file system.
-
-LGIN - Login (ex. LGINusernamepassword)
-LGOT - Logout (ex. LGOT)
-
-STOR - Store file       (ex. STORfile.txt:'filecontents')
-RETR - Retrieve a file  (ex. RETRfile.txt)
-DELE - Delete a file    (ex. DELEfile.txt)
-LIST - List all files   (ex. LIST)
