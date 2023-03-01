@@ -24,12 +24,14 @@ def listen_for_response(sock):
             tipe = mess.getType()
             data = mess.getData().decode('utf-8')
             if tipe == 'OKOK' or tipe == 'ERRO':
+                print(tipe)
                 print(data)
                 break
             elif tipe == 'DATA':
                 global retr_filename
                 with open('downloads/' + retr_filename, 'w') as file:
                     file.write(data)
+                    print(tipe)
                     print('File Retrieved! Look in \'downloads\' folder to access!')
                     break
             else:
@@ -58,7 +60,7 @@ def ClientProtocol(sock):
             conts = file.read()
         data = conts.encode('utf8')
         msg.setData(d + ':' + data)
-        'Fname:file_data'
+        #'Fname:file_data'
 
     #sends message to middleware
     comm = DSComm(sock)
