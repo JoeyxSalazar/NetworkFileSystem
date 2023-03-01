@@ -12,7 +12,8 @@ class DSMessage(object):
     '''
     # Constants
     MCMDS = Enum('MCMDS', {'LGIN': 'LGIN', 'STOR': 'STOR', 'RETR': 'RETR','DELE': 'DELE',
-                       'LGOT': 'LGOT', 'OKOK': 'OKOK','ERRO': 'ERRO', 'MENU': 'MENU', 'LIST':'LIST', 'NULL':'NULL'})
+                       'LGOT': 'LGOT', 'OKOK': 'OKOK','ERRO': 'ERRO', 'MENU': 'MENU',
+                         'LIST':'LIST', 'NULL':'NULL', 'DATA':'DATA'})
 
     PJOIN = '&'
     VJOIN = '{}={}'

@@ -30,6 +30,7 @@ def listen_for_response(sock):
             elif tipe == 'DATA':
                 global retr_filename
                 try:
+                    print(retr_filename)
                     with open('downloads/' + retr_filename, 'w') as file:
                         file.write(data)
                         print(tipe)
@@ -56,7 +57,7 @@ def ClientProtocol(sock):
     #Sets the fname of the file we are retrieving if we receive a 'DATA' message
     if msg.getType() != 'LIST' and msg.getType() != 'LGIN' and msg.getType() != 'LGOT':
         #If its a retr command, then we need to keep the name of the file to write to. 
-        if msg.getType() == 'RETR':
+        if msg.getType() == 'STOR':
             global retr_filename
             retr_filename = d
         #Extracts file contents, then sets file string as data, then encodes

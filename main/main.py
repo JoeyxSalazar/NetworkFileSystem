@@ -23,9 +23,10 @@ def hash_string(string_to_hash):
 
 def send_data(data, type, sock):
     mess = DSMessage()
-
+    print('Type Before Set: ', type)
     mess.setType(type)
     mess.setData(data.encode('utf-8'))
+    print('Typer After Set: ', mess.getType())
     comm = DSComm(sock)
     comm.sendMessage(mess)
 
@@ -110,7 +111,7 @@ def stor_file(data, clisock, dbsock):
     if status == 'OKOK':                    #--------------> DATA or OKOK?
         with open('userdb.txt','a') as file:
             file.write('\n' + current_user_hash + dname)
-            send_data('Stored File!', 'DATA', clisock)  
+            send_data('Stored File!', 'OKOK', clisock)  
     else:
         send_data('Couldn\'t store','ERRO',clisock )
         
@@ -231,7 +232,7 @@ def main_protocol(clientsock, dbsock):
         if mess:
             tipe = mess.getType()
             data = mess.getData().decode('utf-8')
-            print('\t','\CMD: ',tipe, '\n')
+            print('\t','CMD: ',tipe)
             print('\t', 'DATA: ', data, '\n')
             decode_command(tipe,data, clientsock, dbsock)
 
