@@ -26,6 +26,11 @@ def write_file(fname, conts):
     with open('storage/' + fname, 'w') as file:
         file.write(conts)
 
+def read_file(name):
+    with open('storage/'+name, 'r') as file:
+        cont = file.read()
+    return cont
+
 # 'filename:file_contents'
 # assume string is decoded already
 def decode_file_contents(string):
@@ -58,7 +63,7 @@ def stor_file(data, midsock):
 
 def retr_file(fname, midsock):
     try:
-        send_data('You called RETR', 'OKOK', midsock)
+        send_data(read_file(fname), 'OKOK', midsock)
     except:
         send_data('File contents not formatted correctly', 'ERRO', midsock)
     #Fill protocol here

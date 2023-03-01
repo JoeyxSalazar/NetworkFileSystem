@@ -66,11 +66,12 @@ def ClientProtocol(sock):
             else:
                 retr_filename = d
         #Extracts file contents, then sets file string as data, then encodes
-        conts = ''
-        with open(d, 'r') as file:
-            conts = file.read()
-        newdata = d + ':' + conts
-        msg.setData(newdata.encode('utf-8'))
+        if msg.getType() == 'STOR':
+            conts = ''
+            with open(d, 'r') as file:
+                conts = file.read()
+            newdata = d + ':' + conts
+            msg.setData(newdata.encode('utf-8'))
         #'Fname:file_data'
 
     #sends message to middleware

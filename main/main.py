@@ -133,10 +133,10 @@ def retr_file(fname,  clisock, dbsock):
         for line in file:
             if line[4:] == fname and line[:4] == current_user_hash:
                 try:
-                    send_data(fname, 'RETR', dbsock)
+                    send_data(name, 'RETR', dbsock)
                     status, data = receive_data(dbsock)
                     if status == 'OKOK':            
-                        send_data(data, 'OKOK', clisock)
+                        send_data(data, 'DATA', clisock)
                         return
                     else:
                         send_data('Couldn\'t retreive file contents','ERRO',clisock )
