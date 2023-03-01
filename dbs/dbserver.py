@@ -6,10 +6,25 @@ Created on Feb 17, 2023
 
 import socket
 import time
+import os
 from DSMessage import DSMessage
 from DSComm import DSComm
 
 middleware = 51000
+
+def check_if_overwrite(fname):
+    return os.path.exists('storage/' + fname)
+
+def overwrite(fname, conts):
+    file = open('storage/' + fname, 'a')
+    file.seek(0)
+    file.truncate()
+    file.write(conts)
+    file.close()
+
+def write_file(fname, conts):
+    with open('storage/' + fname, 'w') as file:
+        file.write(conts)
 
 # 'filename:file_contents'
 # assume string is decoded already
@@ -27,25 +42,19 @@ def send_data(data, type, sock):
     comm = DSComm(sock)
     comm.sendMessage(mess)
 
-def check_if_overwrite():
-    pass
-
-def overwrite():
-    pass
 
 def stor_file(data, midsock):
     try:
         fname, size, content = decode_file_contents(data)
+        if check_if_overwrite(fname) == True:
+            overwrite(fname, content)
+            send_data('Existing file overwritten', 'OKOK', midsock)
+        else:
+            write_file(fname, content)
+            send_data('File stored', 'OKOK', midsock)
     except:
         send_data('File contents not formatted correctly', 'ERRO', midsock)
-    """
-    Fill protocol here
-    if check_if_overwrite() == True:
-        overwrite()
-    else:
-    """
-    print('Filename: ', fname, '\t', 'Contents: ', content)
-    send_data(fname, 'OKOK', midsock)
+
 
 def retr_file(fname, midsock):
     try:

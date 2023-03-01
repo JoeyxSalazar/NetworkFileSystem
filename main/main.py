@@ -86,24 +86,30 @@ def menu(data, clisock, dbsock):
 
 def stor_file(data, clisock, dbsock):
     '''
-        1.)Send command to storage server along with file data
-        2.)Receive filename and status back
-        .) If responses OKOK
-                add file to userDB
-            else
-                send client erro
-
-        have not considered overwrite protocol yet
+        Data contains 'fname:filecontents'
     '''
 #try:
+#Split string into two parts, extract only the filename
+    parts = data.split(':')
+    dpath = parts[0]
+    dcontents = parts[1]
+    #if a full path was passed, we only need the name
+    if '/' in dpath:
+        pathparts = parts[0].split('/')
+        dname = pathparts[-1]
+    #if only the name was passed
+    else:
+        dname = parts[0]
+
     global current_user_hash
-    fname = current_user_hash + data
-    send_data(fname, 'STOR', dbsock)
+    #reconstruct data to send to dbserver
+    newdata = current_user_hash + dname + ':' + dcontents
+    send_data(newdata, 'STOR', dbsock)
     status, fname = receive_data(dbsock)
     print('From DB\n\tStatus: ', status, '\t', 'fname: ', fname)
     if status == 'OKOK':                    #--------------> DATA or OKOK?
         with open('userdb.txt','a') as file:
-            file.write('\n' + fname)
+            file.write('\n' + current_user_hash + dname)
         send_data('Stored File!', 'OKOK', clisock)
     else:
         send_data('Couldn\'t store','ERRO',clisock )
@@ -225,7 +231,8 @@ def main_protocol(clientsock, dbsock):
         if mess:
             tipe = mess.getType()
             data = mess.getData().decode('utf-8')
-            print('\t','\tData/Command:',data)
+            print('\t','\CMD: ',tipe, '\n')
+            print('\t', 'DATA: ', data, '\n')
             decode_command(tipe,data, clientsock, dbsock)
 
 

@@ -46,20 +46,20 @@ def ClientProtocol(sock):
     msg.setType(line[:4])
     d = line[4:]
     #Keeps data if 'LIST' or 'LGIN' or 'LGOT' is called
-    msg.setData(d)
+    msg.setData(d.encode('utf-8'))
 
     #Sets the fname of the file we are retrieving if we receive a 'DATA' message
-    if msg.getType() != 'LIST':
+    if msg.getType() != 'LIST' and msg.getType() != 'LGIN' and msg.getType() != 'LGOT':
         #If its a retr command, then we need to keep the name of the file to write to. 
         if msg.getType() == 'RETR':
             global retr_filename
             retr_filename = d
-        #Extracts file contents, encodes, then sets file string as data
+        #Extracts file contents, then sets file string as data, then encodes
         conts = ''
         with open(d, 'r') as file:
             conts = file.read()
-        data = conts.encode('utf8')
-        msg.setData(d + ':' + data)
+        newdata = d + ':' + conts
+        msg.setData(newdata.encode('utf-8'))
         #'Fname:file_data'
 
     #sends message to middleware
