@@ -27,7 +27,6 @@ def send_data(data, type, sock):
     mess.setType(type)
     mess.setData(data.encode('utf-8'))
     comm = DSComm(sock)
-
     comm.sendMessage(mess)
 
 def receive_data(dbsock):
@@ -105,12 +104,13 @@ def stor_file(data, clisock, dbsock):
     #reconstruct data to send to dbserver
     newdata = current_user_hash + dname + ':' + dcontents
     send_data(newdata, 'STOR', dbsock)
-    status, fname = receive_data(dbsock)
-    print('From DB\n\tStatus: ', status, '\t', 'fname: ', fname)
+    status, message = receive_data(dbsock)
+    print('From DB\n\tStatus: ', status, '\t', 'Message: ', message)
+    #Need to check if overwriting
     if status == 'OKOK':                    #--------------> DATA or OKOK?
         with open('userdb.txt','a') as file:
             file.write('\n' + current_user_hash + dname)
-        send_data('Stored File!', 'OKOK', clisock)
+            send_data('Stored File!', 'DATA', clisock)  
     else:
         send_data('Couldn\'t store','ERRO',clisock )
         

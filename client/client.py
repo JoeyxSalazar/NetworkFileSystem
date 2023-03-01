@@ -29,13 +29,18 @@ def listen_for_response(sock):
                 break
             elif tipe == 'DATA':
                 global retr_filename
-                with open('downloads/' + retr_filename, 'w') as file:
-                    file.write(data)
-                    print(tipe)
-                    print('File Retrieved! Look in \'downloads\' folder to access!')
+                try:
+                    with open('downloads/' + retr_filename, 'w') as file:
+                        file.write(data)
+                        print(tipe)
+                        print('File Retrieved! Look in \'downloads\' folder to access!')
+                        break
+                except:
+                    print('Couldnt write to file')
                     break
             else:
                 print('Unknown Error :/')
+                print(tipe + ':' + data)
                 break
 
 
