@@ -55,11 +55,16 @@ def ClientProtocol(sock):
     msg.setData(d.encode('utf-8'))
 
     #Sets the fname of the file we are retrieving if we receive a 'DATA' message
-    if msg.getType() != 'LIST' and msg.getType() != 'LGIN' and msg.getType() != 'LGOT':
+    if msg.getType() != 'LIST' and msg.getType() != 'LGIN' and msg.getType() != 'LGOT' and msg.getType() != 'MENU':
         #If its a retr command, then we need to keep the name of the file to write to. 
-        if msg.getType() == 'STOR':
-            global retr_filename
-            retr_filename = d
+        global retr_filename
+        if msg.getType() == 'RETR':
+            if '/' in d:
+                name = d.split('/')
+                n = name[-1]
+                retr_filename = n
+            else:
+                retr_filename = d
         #Extracts file contents, then sets file string as data, then encodes
         conts = ''
         with open(d, 'r') as file:
