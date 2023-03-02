@@ -88,8 +88,8 @@ def stor_file(data, clisock, dbsock):
     '''
         Data contains 'fname:filecontents'
     '''
-#try:
-#Split string into two parts, extract only the filename
+    #try:
+    #Split string into two parts, extract only the filename
     parts = data.split(':')
     dpath = parts[0]
     dcontents = parts[1]
@@ -97,36 +97,32 @@ def stor_file(data, clisock, dbsock):
     if '/' in dpath:
         pathparts = parts[0].split('/')
         dname = pathparts[-1]
-    #if only the name was passed
     else:
         dname = parts[0]
 
     global current_user_hash
-    #reconstruct data to send to dbserver
     newdata = current_user_hash + dname + ':' + dcontents
     send_data(newdata, 'STOR', dbsock)
     status, message = receive_data(dbsock)
     print('From DB\n\tStatus: ', status, '\t', 'Message: ', message)
     #Need to check if overwriting
-    if status == 'OKOK':                    #--------------> DATA or OKOK?
-        with open('userdb.txt','a') as file:
+    if status == 'OKOK':                   
+        with open('userdb.txt','a+') as file:
+            file.seek(0)
+            for line in file:
+                print(line.strip())
+                if line.strip() == (current_user_hash + dname):
+                    send_data('Overwrote File!', 'OKOK', clisock)
+                    return
             file.write('\n' + current_user_hash + dname)
             send_data('Stored File!', 'OKOK', clisock)  
     else:
         send_data('Couldn\'t store','ERRO',clisock )
         
-#except:
-    #send_data('Couldn\'t communicate with dbserver', 'ERRO', clisock)
+    #except:
+        #send_data('Couldn\'t communicate with dbserver', 'ERRO', clisock)
 
 def retr_file(fname,  clisock, dbsock):
-    '''
-        1.)Send command to storage server along with filename
-        2.)Receive data and status back
-        .) If responses OKOK
-                send to client
-            else
-                send client erro
-    '''
     global current_user_hash
     name = current_user_hash + fname
     with open('userdb.txt','r') as file:
@@ -186,18 +182,6 @@ def list_files(data, clisock, dbsock):
         send_data('No files found/exist', 'ERRO', clisock)
     else:
         send_data(files, 'OKOK', clisock)
-
-
-def data_in(data):
-    pass
-
-def okok_in(data):
-    pass
-
-def erro_in(data):
-    pass
-
-
 
 def decode_command(line, data, clisock, dbsock = None):
     if signed_in == False:
