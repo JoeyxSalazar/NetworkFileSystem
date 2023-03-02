@@ -71,7 +71,8 @@ def ClientProtocol(sock):
                     break
                 except:
                     print('Invalid path, try again')
-        break
+        else:
+            break
             #'Fname:file_data'
 
     #sends message to middleware
