@@ -46,33 +46,33 @@ def listen_for_response(sock):
 
 
 def ClientProtocol(sock):
-    msg = DSMessage()
-    line = input('Enter Command: ')
-    #Extracts the command that we are going to execute, and extracts the file name
-    msg.setType(line[:4])
-    d = line[4:]
-    #Keeps data if 'LIST' or 'LGIN' or 'LGOT' is called
-    msg.setData(d.encode('utf-8'))
+    while True:
+        msg = DSMessage()
+        line = input('Enter Command: ')
+        #Extracts the command that we are going to execute, and extracts the file name
+        msg.setType(line[:4])
+        d = line[4:]
+        #Keeps data if 'LIST' or 'LGIN' or 'LGOT' is called
+        msg.setData(d.encode('utf-8'))
 
-    #Sets the fname of the file we are retrieving if we receive a 'DATA' message
-    if msg.getType() != 'LIST' and msg.getType() != 'LGIN' and msg.getType() != 'LGOT' and msg.getType() != 'MENU':
-        #If its a retr command, then we need to keep the name of the file to write to. 
-        global retr_filename
-        if msg.getType() == 'RETR':
-            if '/' in d:
-                name = d.split('/')
-                n = name[-1]
-                retr_filename = n
-            else:
+
+        if msg.getType() == 'RETR' or msg.getType() == 'STOR':
+            global retr_filename
+            if msg.getType() == 'RETR':
                 retr_filename = d
-        #Extracts file contents, then sets file string as data, then encodes
-        if msg.getType() == 'STOR':
-            conts = ''
-            with open(d, 'r') as file:
-                conts = file.read()
-            newdata = d + ':' + conts
-            msg.setData(newdata.encode('utf-8'))
-        #'Fname:file_data'
+                break
+            else: #store
+                conts = ''
+                try:
+                    with open(d, 'r') as file:
+                        conts = file.read()
+                    newdata = d + ':' + conts
+                    msg.setData(newdata.encode('utf-8'))
+                    break
+                except:
+                    print('Invalid path, try again')
+        break
+            #'Fname:file_data'
 
     #sends message to middleware
     comm = DSComm(sock)
