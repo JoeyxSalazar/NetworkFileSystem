@@ -65,14 +65,17 @@ def retr_file(fname, midsock):
     try:
         send_data(read_file(fname), 'OKOK', midsock)
     except:
-        send_data('File contents not formatted correctly', 'ERRO', midsock)
+        send_data('Error Retrieving', 'ERRO', midsock)
     #Fill protocol here
 
-def dele_file(data, midsock):
+def dele_file(fname, midsock):
     try:
-        send_data('You called DELE', 'OKOK', midsock)
+        file_path = 'storage/' + fname
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            send_data(fname +' deleted', 'OKOK', midsock)
     except:
-        send_data('File contents not formatted correctly', 'ERRO', midsock)
+        send_data('Error Deleting', 'ERRO', midsock)
     #Fill protocol here
     
 

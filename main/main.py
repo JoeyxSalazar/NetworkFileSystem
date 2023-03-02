@@ -181,7 +181,7 @@ def list_files(data, clisock, dbsock):
     with open('userdb.txt','r') as file:
         for line in file:
             if current_user_hash in line:
-                files += line[4:] + '\n'
+                files += line[4:]
     if files == '':
         send_data('No files found/exist', 'ERRO', clisock)
     else:
