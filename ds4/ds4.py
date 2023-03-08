@@ -79,9 +79,11 @@ def retr_file(fname, midsock):
 
 def dele_file(fname, midsock):
     try:
-        file_path = 'storage/' + fname
-        if os.path.exists(file_path):
+        file_path = 'ABD/' + fname
+        file_path1 = 'BC/' + fname
+        if os.path.exists(file_path) and os.path.exists(file_path1):
             os.remove(file_path)
+            os.remove(file_path1)
             send_data(fname +' deleted', 'OKOK', midsock)
     except:
         send_data('Error Deleting', 'ERRO', midsock)
