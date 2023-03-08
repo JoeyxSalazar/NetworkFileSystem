@@ -59,12 +59,12 @@ def send_data(data, type, sock):
 
 def stor_file(data, midsock):
     try:
-        fname, size, content = decode_file_contents(data)
+        fname, size, content1, content2 = decode_file_contents(data)
         if check_if_overwrite(fname) == True:
-            overwrite(fname, content)
+            overwrite(fname, content1, content2)
             send_data('Existing file overwritten', 'OKOK', midsock)
         else:
-            write_file(fname, content)
+            write_file(fname, content1, content2)
             send_data('File stored', 'OKOK', midsock)
     except:
         send_data('File contents not formatted correctly', 'ERRO', midsock)

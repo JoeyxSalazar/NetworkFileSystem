@@ -30,8 +30,10 @@ def overwrite(fname, cont1, cont2):
 
     
 def write_file(fname, cont1, cont2):
-    with open('storage/' + fname, 'w') as file:
-        file.write(conts)
+    with open('A/' + fname, 'w') as file:
+        file.write(cont1)
+    with open('B/' + fname, 'w') as file1:
+        file1.write(cont2)
 
 def read_file(name):
     with open('storage/'+name, 'r') as file:
@@ -60,10 +62,10 @@ def stor_file(data, midsock):
     try:
         fname, size, content1, content2 = decode_file_contents(data)
         if check_if_overwrite(fname) == True:
-            overwrite(fname, content)
+            overwrite(fname, content1, content2)
             send_data('Existing file overwritten', 'OKOK', midsock)
         else:
-            write_file(fname, content)
+            write_file(fname, content1, content2)
             send_data('File stored', 'OKOK', midsock)
     except:
         send_data('File contents not formatted correctly', 'ERRO', midsock)
