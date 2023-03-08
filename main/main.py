@@ -29,7 +29,10 @@ def send_data(data, type, sock):
     mess = DSMessage()
     print('Type Before Set: ', type)
     mess.setType(type)
-    mess.setData(data.encode('utf-8'))
+    if isinstance(data, bytes) == False:
+        mess.setData(data.encode('utf-8'))
+    else:
+        mess.setData(data)
     print('Typer After Set: ', mess.getType())
     comm = DSComm(sock)
     comm.sendMessage(mess)
@@ -97,7 +100,9 @@ def stor_file(data, clisock, ds1, ds2, ds3, ds4):
     #Extract 4 equal parts from the content:
     A, B, C, D = mainhelp.split_file_into_four(dcontents)
     #Need to send parts to all 4 servers now, if all 4 accept, then continue
-    status = mainhelp.store_all_four(A, B, C, D, ds1, ds2, ds3, ds4)
+    global current_user_hash
+    fname = current_user_hash + dname + ':'
+    status = mainhelp.store_all_four(fname, A, B, C, D, ds1, ds2, ds3, ds4)
     #Need to check if overwriting
     if status == 'OKOK':                   
         with open('userdb.txt','a+') as file:
@@ -122,8 +127,7 @@ def retr_file(fname,  clisock, ds1 = None, ds2 = None, ds3 = None, ds4 = None):
         for line in file:
             if line[4:] == fname and line[:4] == current_user_hash:
                 try:
-                    send_data(name, 'RETR', dbsock)
-                    status, data = receive_data(dbsock)
+                    status, data = mainhelp.retr_protocol(name, ds1, ds2, ds3, ds4)
                     if status == 'OKOK':            
                         send_data(data, 'DATA', clisock)
                         return
@@ -137,7 +141,7 @@ def retr_file(fname,  clisock, ds1 = None, ds2 = None, ds3 = None, ds4 = None):
            
         send_data('Couldn\'t find file','ERRO',clisock )
 
-def dele_file(fname, clisock, dbsock):
+def dele_file(fname, clisock, ds1, ds2, ds3, ds4):
     global current_user_hash
     name = current_user_hash + fname
     with open('userdb.txt', 'r+') as file:
@@ -147,8 +151,7 @@ def dele_file(fname, clisock, dbsock):
         for line in lines:
             if line[:4] == current_user_hash and line[4:].rstrip() == fname:
                 try:
-                    send_data(name, 'DELE', dbsock)
-                    status, data = receive_data(dbsock)
+                    status = mainhelp.dele_all_four(name, ds1, ds2, ds3, ds4)
                     if status == 'OKOK':
                         lines.remove(line)  # remove the line from the list
                         file.write(''.join(lines))  # write the updated list back to the file
@@ -199,7 +202,7 @@ def decode_command(line, data, clisock, ds1, ds2, ds3, ds4):
             send_data('Cant Decode','ERRO',clisock )
     return
         
-def main_protocol(clientsock, ds1, ds2, ds3, ds4):
+def main_protocol(clientsock, ds1 = None, ds2 = None, ds3= None, ds4 = None):
     comm = DSComm(clientsock)
     while True:
         print()
@@ -216,13 +219,14 @@ def main_protocol(clientsock, ds1, ds2, ds3, ds4):
 
 if __name__ == '__main__':
     #Connect to DSservers
-    servers = [("localhost", ds1), ("localhost", ds2),("localhost", ds3),("localhost", ds4),]
+    servers = [("localhost", 51000), ("localhost", 51001),("localhost", 51002),("localhost", 51003),]
     onl_servers = mainhelp.ConnectionProtocol(servers)
     '''
     #Connect to DBserver
     dbserv = socket.socket()
     dbserv.connect(('localhost', ds1))
     '''
+    
     #Allow for Client Connection
     clientserv = socket.socket()
     clientserv.bind(("localhost", client))
@@ -233,9 +237,8 @@ if __name__ == '__main__':
         main_protocol(clientsock, onl_servers['ds1'], onl_servers['ds2'], onl_servers['ds3'], onl_servers['ds4'])
         clientsock.close()
     clientserv.close()
-    for socket in onl_servers.values():
-        socket.close()
-    
+    for s in onl_servers.values():
+        s.close()
 
 
     

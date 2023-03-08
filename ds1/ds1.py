@@ -16,13 +16,13 @@ def check_if_overwrite(fname):
     return os.path.exists('A/' + fname)
 
 def overwrite(fname, cont1, cont2):
-    file = open('A/' + fname, 'a')
+    file = open('A/' + fname, 'ab')
     file.seek(0)
     file.truncate()
     file.write(cont1)
     file.close()
 
-    file1 = open('B/' + fname, 'a')
+    file1 = open('B/' + fname, 'ab')
     file1.seek(0)
     file1.truncate()
     file1.write(cont2)
@@ -30,9 +30,9 @@ def overwrite(fname, cont1, cont2):
 
     
 def write_file(fname, cont1, cont2):
-    with open('A/' + fname, 'w') as file:
+    with open('A/' + fname, 'wb') as file:
         file.write(cont1)
-    with open('B/' + fname, 'w') as file1:
+    with open('B/' + fname, 'wb') as file1:
         file1.write(cont2)
 
 def read_file(name):
@@ -42,11 +42,12 @@ def read_file(name):
 
 # 'filename:file_contents'
 # assume string is decoded already
-def decode_file_contents(string):
-    filename, file_content = string.split(":")
+def decode_file_contents(data):
+    #string = data.decode('utf-8')
+    filename, file_content = data.split(":", 1)
     size_of_content = len(file_content)
     mid = len(file_content)//2
-    return filename, size_of_content, file_content[:mid], file_content[mid:]
+    return filename, size_of_content, file_content[:mid].encode('utf-8'), file_content[mid:].encode('utf-8')
     #filename = filename.strip("'")
     #file_content = file_content.strip("'")
 
@@ -60,15 +61,18 @@ def send_data(data, type, sock):
 
 def stor_file(data, midsock):
     try:
+        print('Step 1')
         fname, size, content1, content2 = decode_file_contents(data)
         if check_if_overwrite(fname) == True:
             overwrite(fname, content1, content2)
             send_data('Existing file overwritten', 'OKOK', midsock)
         else:
+            print('Step 2')
             write_file(fname, content1, content2)
+            print('Step 3')
             send_data('File stored', 'OKOK', midsock)
-    except:
-        send_data('File contents not formatted correctly', 'ERRO', midsock)
+    except Exception as E:
+        send_data('Exception raised: ' + E, 'ERRO', midsock)
 
 
 def retr_file(fname, midsock):
@@ -80,9 +84,11 @@ def retr_file(fname, midsock):
 
 def dele_file(fname, midsock):
     try:
-        file_path = 'storage/' + fname
-        if os.path.exists(file_path):
+        file_path = 'A/' + fname
+        file_path1 = 'B/' + fname
+        if os.path.exists(file_path) and os.path.exists(file_path1):
             os.remove(file_path)
+            os.remove(file_path1)
             send_data(fname +' deleted', 'OKOK', midsock)
     except:
         send_data('Error Deleting', 'ERRO', midsock)

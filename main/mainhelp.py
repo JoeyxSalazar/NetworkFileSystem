@@ -12,9 +12,8 @@ def ConnectionProtocol(ds_servers):
     for server in ds_servers:
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(2)  # Set a timeout for the connection attempt
+            #s.settimeout(2)  # Set a timeout for the connection attempt
             s.connect(server)
-            s.close()
             online_servers['ds'+str(i)] = s
             print(f"Connected to server {server[0]}:{server[1]}")
         except:
@@ -69,19 +68,90 @@ def XOR_parts(p1, p2, p3 = None):
     return result.decode('utf-8')
 
 def store_all_four(fname, A, B, C, D, ds1, ds2, ds3, ds4):
-    main.send_data(fname+A+B, 'STOR', ds1)
+    main.send_data((fname+A+B).encode('utf-8'), 'STOR', ds1)
     stat1, d1 = main.receive_data(ds1)
 
-    main.send_data(fname+C+D, 'STOR', ds2)
+    main.send_data((fname+C+D).encode('utf-8'), 'STOR', ds2)
     stat2, d2 = main.receive_data(ds2)
 
-    main.send_data(fname+XOR_parts(A,C) + XOR_parts(B, D), 'STOR', ds3)
+    main.send_data((fname+XOR_parts(A,C) + XOR_parts(B, D)).encode('utf-8'), 'STOR', ds3)
     stat3, d3 = main.receive_data(ds3)
 
-    main.send_data(fname+XOR_parts(A, B, D) + XOR_parts(B, C), 'STOR', ds4)
+    main.send_data((fname+XOR_parts(A, B, D) + XOR_parts(B, C)).encode('utf-8'), 'STOR', ds4)
     stat4, d4 = main.receive_data(ds4)
 
     if stat1 == 'OKOK' and stat2 == 'OKOK' and stat3 == 'OKOK' and stat4 == 'OKOK':
         return 'OKOK'
     else:
         return 'ERRO'
+    
+def dele_all_four(fname, ds1, ds2, ds3, ds4):
+    main.send_data(fname, 'DELE', ds1)
+    stat1, d1 = main.receive_data(ds1)
+
+    main.send_data(fname, 'DELE', ds2)
+    stat2, d2 = main.receive_data(ds2)
+
+    main.send_data(fname, 'DELE', ds3)
+    stat3, d3 = main.receive_data(ds3)
+
+    main.send_data(fname, 'DELE', ds4)
+    stat4, d4 = main.receive_data(ds4)
+
+    if stat1 == 'OKOK' and stat2 == 'OKOK' and stat3 == 'OKOK' and stat4 == 'OKOK':
+        return 'OKOK'
+    else:
+        return 'ERRO'
+    
+def retr_protocol(fname, ds1, ds2, ds3, ds4):
+    #ds3 and ds4 online
+    stat1, stat2
+    data = None
+    if ds1 == None and ds2 == None:
+        main.send_data(fname, 'RETR', ds3)
+        stat1, d1 = main.receive_data(ds3)
+        main.send_data(fname, 'RETR', ds4)
+        stat2, d2 = main.receive_data(ds4)
+        
+        mid1 = len(d1) //2
+
+        pass
+    #ds2 and ds4 online
+    elif ds1 == None and ds3 == None:
+        main.send_data(fname, 'RETR', ds2)
+        stat1, d1 = main.receive_data(ds2)
+        main.send_data(fname, 'RETR', ds4)
+        stat2, d2 = main.receive_data(ds4)
+        pass
+    #ds2 and ds3 online
+    elif ds1 == None and ds4 == None:
+        main.send_data(fname, 'RETR', ds2)
+        stat1, d1 = main.receive_data(ds2)
+        main.send_data(fname, 'RETR', ds3)
+        stat2, d2 = main.receive_data(ds3)
+        pass
+    #ds1 and ds4 online
+    elif ds2 == None and ds3 == None:
+        main.send_data(fname, 'RETR', ds1)
+        stat1, d1 = main.receive_data(ds1)
+        main.send_data(fname, 'RETR', ds4)
+        stat2, d2 = main.receive_data(ds4)
+        pass
+    #ds1 and ds3 online
+    elif ds2 == None and ds4 == None:
+        main.send_data(fname, 'RETR', ds1)
+        stat1, d1 = main.receive_data(ds1)
+        main.send_data(fname, 'RETR', ds3)
+        stat2, d2 = main.receive_data(ds3)
+        pass
+    #ds1 and ds2 online
+    else:
+        main.send_data(fname, 'RETR', ds1)
+        stat1, d1 = main.receive_data(ds1)
+        main.send_data(fname, 'RETR', ds2)
+        stat2, d2 = main.receive_data(ds2)
+        pass
+    if stat1 == 'OKOK' and stat2 == 'OKOK':
+        return 'OKOK', data
+    else:
+        return 'ERRO', data

@@ -16,22 +16,22 @@ def check_if_overwrite(fname):
     return os.path.exists('ABD/' + fname)
 
 def overwrite(fname, cont1, cont2):
-    file = open('ABD/' + fname, 'a')
+    file = open('ABD/' + fname, 'ab')
     file.seek(0)
     file.truncate()
     file.write(cont1)
     file.close()
 
-    file1 = open('BC/' + fname, 'a')
+    file1 = open('BC/' + fname, 'ab')
     file1.seek(0)
     file1.truncate()
     file1.write(cont2)
     file1.close()
 
 def write_file(fname, cont1, cont2):
-    with open('ABD/' + fname, 'w') as file:
+    with open('ABD/' + fname, 'wb') as file:
         file.write(cont1)
-    with open('BC/' + fname, 'w') as file1:
+    with open('BC/' + fname, 'wb') as file1:
         file1.write(cont2)
 
 def read_file(name):
@@ -41,11 +41,12 @@ def read_file(name):
 
 # 'filename:file_contents'
 # assume string is decoded already
-def decode_file_contents(string):
-    filename, file_content = string.split(":")
+def decode_file_contents(data):
+    #string = data.decode('utf-8')
+    filename, file_content = data.split(":",1)
     size_of_content = len(file_content)
     mid = len(file_content)//2
-    return filename, size_of_content, file_content[:mid], file_content[mid:]
+    return filename, size_of_content, file_content[:mid].encode('utf-8'), file_content[mid:].encode('utf-8')
     #filename = filename.strip("'")
     #file_content = file_content.strip("'")
 
@@ -66,8 +67,8 @@ def stor_file(data, midsock):
         else:
             write_file(fname, content1, content2)
             send_data('File stored', 'OKOK', midsock)
-    except:
-        send_data('File contents not formatted correctly', 'ERRO', midsock)
+    except Exception as E:
+        send_data('Exception raised: ' + E, 'ERRO', midsock)
 
 
 def retr_file(fname, midsock):
