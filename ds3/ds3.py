@@ -35,9 +35,11 @@ def write_file(fname, cont1, cont2):
         file1.write(cont2)
 
 def read_file(name):
-    with open('storage/'+name, 'r') as file:
-        cont = file.read()
-    return cont
+    with open('AC/'+ name, 'rb') as file:
+        cont1 = file.read()
+    with open('BD/'+ name, 'rb') as file:
+        cont2 = file.read()
+    return cont1 + cont2
 
 # 'filename:file_contents'
 # assume string is decoded already
@@ -53,7 +55,10 @@ def decode_file_contents(data):
 def send_data(data, type, sock):
     mess = DSMessage()
     mess.setType(type)
-    mess.setData(data.encode('utf-8'))
+    if isinstance(data, bytes) == False:
+        mess.setData(data.encode('utf-8'))
+    else:
+        mess.setData(data)
     comm = DSComm(sock)
     comm.sendMessage(mess)
 

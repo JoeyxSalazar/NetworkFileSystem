@@ -18,6 +18,7 @@ def ConnectionProtocol(ds_servers):
             print(f"Connected to server {server[0]}:{server[1]}")
         except:
             print(f"Unable to connect to server {server[0]}:{server[1]}")
+            online_servers['ds'+str(i)] = None
         i+=1
 
     # Check how many servers were successfully connected to
@@ -38,6 +39,15 @@ def split_file_into_four(file_string):
     if last_part_len < part_len:
         parts[-1] = parts[-1] + '0'*(part_len - last_part_len)
     return parts[0], parts[1], parts[2], parts[3]
+
+def split_bfile_half(bfile):
+    part_len = math.ceil(len(bfile) / 2)
+    parts = [bfile[i:i+part_len] for i in range(0, len(bfile), part_len)]
+    # Pad the last part with zeros if necessary
+    last_part_len = len(parts[-1])
+    if last_part_len < part_len:
+        parts[-1] = parts[-1] + '0'*(part_len - last_part_len)
+    return parts[0], parts[1]
 
 def split_file_path(data):
 #Split string into two parts, extract only the filename
@@ -105,53 +115,78 @@ def dele_all_four(fname, ds1, ds2, ds3, ds4):
     
 def retr_protocol(fname, ds1, ds2, ds3, ds4):
     #ds3 and ds4 online
-    stat1, stat2
+    stat1 = 'ERRO'
+    stat2 = 'ERRO'
     data = None
-    if ds1 == None and ds2 == None:
-        main.send_data(fname, 'RETR', ds3)
-        stat1, d1 = main.receive_data(ds3)
-        main.send_data(fname, 'RETR', ds4)
-        stat2, d2 = main.receive_data(ds4)
-        
-        mid1 = len(d1) //2
+    try:
+        if ds1 == None and ds2 == None:
+            main.send_data(fname, 'RETR', ds3)
+            stat1, d1 = main.receive_data(ds3)
+            main.send_data(fname, 'RETR', ds4)
+            stat2, d2 = main.receive_data(ds4)
+            AC, BD = split_bfile_half(d1)
+            ABD, BC = split_bfile_half(d2)
+            A = XOR_parts(ABD, BD) 
+            C = XOR_parts(A, AC)
+            B = XOR_parts(BC, C)
+            D = XOR_parts(ABD, A, B)
+            data = A + B + C + D
+            pass
+        #ds2 and ds4 online
+        elif ds1 == None and ds3 == None:
+            main.send_data(fname, 'RETR', ds2)
+            stat1, d1 = main.receive_data(ds2)
+            main.send_data(fname, 'RETR', ds4)
+            stat2, d2 = main.receive_data(ds4)
+            C, D = split_bfile_half(d1)
+            ABD, BC = split_bfile_half(d2)
+            data = XOR_parts(ABD, D, XOR_parts(BC, C)) + XOR_parts(BC, C) + C + D
+            pass
+        #ds2 and ds3 online
+        elif ds1 == None and ds4 == None:
+            main.send_data(fname, 'RETR', ds2)
+            stat1, d1 = main.receive_data(ds2)
+            main.send_data(fname, 'RETR', ds3)
+            stat2, d2 = main.receive_data(ds3)
+            C, D = split_bfile_half(d1)
+            AC, BD = split_bfile_half(d2)
+            data = XOR_parts(AC, C) + XOR_parts(BD, D) + C + D
+            pass
+        #ds1 and ds4 online
+        elif ds2 == None and ds3 == None:
+            main.send_data(fname, 'RETR', ds1)
+            stat1, d1 = main.receive_data(ds1)
+            main.send_data(fname, 'RETR', ds4)
+            stat2, d2 = main.receive_data(ds4)
+            A, B = split_bfile_half(d1)
+            ABD, BC = split_bfile_half(d2)
+            data = A + B + XOR_parts(B, BC) + XOR_parts(A, B, ABD)
+            pass
+        #ds1 and ds3 online
+        elif ds2 == None and ds4 == None:
+            main.send_data(fname, 'RETR', ds1)
+            stat1, d1 = main.receive_data(ds1)
+            main.send_data(fname, 'RETR', ds3)
+            stat2, d2 = main.receive_data(ds3)
+            A, B = split_bfile_half(d1)
+            AC, BD = split_bfile_half(d2)
+            data = A + B + XOR_parts(A, AC) + XOR_parts(B, BD)
+            pass
+        #ds1 and ds2 online
+        else:
+            main.send_data(fname, 'RETR', ds1)
+            stat1, d1 = main.receive_data(ds1)
+            main.send_data(fname, 'RETR', ds2)
+            stat2, d2 = main.receive_data(ds2)
+            A, B = split_bfile_half(d1)
+            C, D = split_bfile_half(d2)
+            data = A + B + C + D
+            pass
+    except Exception as e:
+        print(e)
 
-        pass
-    #ds2 and ds4 online
-    elif ds1 == None and ds3 == None:
-        main.send_data(fname, 'RETR', ds2)
-        stat1, d1 = main.receive_data(ds2)
-        main.send_data(fname, 'RETR', ds4)
-        stat2, d2 = main.receive_data(ds4)
-        pass
-    #ds2 and ds3 online
-    elif ds1 == None and ds4 == None:
-        main.send_data(fname, 'RETR', ds2)
-        stat1, d1 = main.receive_data(ds2)
-        main.send_data(fname, 'RETR', ds3)
-        stat2, d2 = main.receive_data(ds3)
-        pass
-    #ds1 and ds4 online
-    elif ds2 == None and ds3 == None:
-        main.send_data(fname, 'RETR', ds1)
-        stat1, d1 = main.receive_data(ds1)
-        main.send_data(fname, 'RETR', ds4)
-        stat2, d2 = main.receive_data(ds4)
-        pass
-    #ds1 and ds3 online
-    elif ds2 == None and ds4 == None:
-        main.send_data(fname, 'RETR', ds1)
-        stat1, d1 = main.receive_data(ds1)
-        main.send_data(fname, 'RETR', ds3)
-        stat2, d2 = main.receive_data(ds3)
-        pass
-    #ds1 and ds2 online
-    else:
-        main.send_data(fname, 'RETR', ds1)
-        stat1, d1 = main.receive_data(ds1)
-        main.send_data(fname, 'RETR', ds2)
-        stat2, d2 = main.receive_data(ds2)
-        pass
     if stat1 == 'OKOK' and stat2 == 'OKOK':
         return 'OKOK', data
     else:
         return 'ERRO', data
+    

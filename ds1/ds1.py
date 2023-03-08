@@ -36,9 +36,14 @@ def write_file(fname, cont1, cont2):
         file1.write(cont2)
 
 def read_file(name):
-    with open('storage/'+name, 'r') as file:
-        cont = file.read()
-    return cont
+    try:
+        with open('A/'+ name, 'rb') as file:
+            cont1 = file.read()
+        with open('B/'+ name, 'rb') as file:
+            cont2 = file.read()
+    except Exception as E:
+        print(E)
+    return cont1 + cont2
 
 # 'filename:file_contents'
 # assume string is decoded already
@@ -54,7 +59,10 @@ def decode_file_contents(data):
 def send_data(data, type, sock):
     mess = DSMessage()
     mess.setType(type)
-    mess.setData(data.encode('utf-8'))
+    if isinstance(data, bytes) == False:
+        mess.setData(data.encode('utf-8'))
+    else:
+        mess.setData(data)
     comm = DSComm(sock)
     comm.sendMessage(mess)
 
@@ -78,7 +86,8 @@ def stor_file(data, midsock):
 def retr_file(fname, midsock):
     try:
         send_data(read_file(fname), 'OKOK', midsock)
-    except:
+    except Exception as E:
+        print(E)
         send_data('Error Retrieving', 'ERRO', midsock)
     #Fill protocol here
 

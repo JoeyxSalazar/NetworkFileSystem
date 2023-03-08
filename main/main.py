@@ -135,7 +135,8 @@ def retr_file(fname,  clisock, ds1 = None, ds2 = None, ds3 = None, ds4 = None):
                         send_data('Couldn\'t retreive file contents','ERRO',clisock )
                         return
 
-                except:
+                except Exception as e:
+                    print(e)
                     send_data('Couldn\'t retreive file contents','ERRO',clisock )
                     return
            
