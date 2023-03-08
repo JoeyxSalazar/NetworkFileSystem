@@ -13,16 +13,23 @@ from DSComm import DSComm
 middleware = 51000
 
 def check_if_overwrite(fname):
-    return os.path.exists('storage/' + fname)
+    return os.path.exists('A/' + fname)
 
-def overwrite(fname, conts):
-    file = open('storage/' + fname, 'a')
+def overwrite(fname, cont1, cont2):
+    file = open('A/' + fname, 'a')
     file.seek(0)
     file.truncate()
-    file.write(conts)
+    file.write(cont1)
     file.close()
 
-def write_file(fname, conts):
+    file1 = open('B/' + fname, 'a')
+    file1.seek(0)
+    file1.truncate()
+    file1.write(cont2)
+    file1.close()
+
+    
+def write_file(fname, cont1, cont2):
     with open('storage/' + fname, 'w') as file:
         file.write(conts)
 
@@ -36,7 +43,8 @@ def read_file(name):
 def decode_file_contents(string):
     filename, file_content = string.split(":")
     size_of_content = len(file_content)
-    return filename, size_of_content, file_content
+    mid = len(file_content)//2
+    return filename, size_of_content, file_content[:mid], file_content[mid:]
     #filename = filename.strip("'")
     #file_content = file_content.strip("'")
 
@@ -50,7 +58,7 @@ def send_data(data, type, sock):
 
 def stor_file(data, midsock):
     try:
-        fname, size, content = decode_file_contents(data)
+        fname, size, content1, content2 = decode_file_contents(data)
         if check_if_overwrite(fname) == True:
             overwrite(fname, content)
             send_data('Existing file overwritten', 'OKOK', midsock)

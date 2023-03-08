@@ -10,21 +10,29 @@ import os
 from DSMessage import DSMessage
 from DSComm import DSComm
 
-middleware = 51000
+middleware = 51001
 
 def check_if_overwrite(fname):
-    return os.path.exists('storage/' + fname)
+    return os.path.exists('C/' + fname)
 
-def overwrite(fname, conts):
-    file = open('storage/' + fname, 'a')
+def overwrite(fname, cont1, cont2):
+    file = open('C/' + fname, 'a')
     file.seek(0)
     file.truncate()
-    file.write(conts)
+    file.write(cont1)
     file.close()
 
-def write_file(fname, conts):
-    with open('storage/' + fname, 'w') as file:
-        file.write(conts)
+    file1 = open('D/' + fname, 'a')
+    file1.seek(0)
+    file1.truncate()
+    file1.write(cont2)
+    file1.close()
+
+def write_file(fname, cont1, cont2):
+    with open('C/' + fname, 'w') as file:
+        file.write(cont1)
+    with open('D/' + fname, 'w') as file1:
+        file1.write(cont2)
 
 def read_file(name):
     with open('storage/'+name, 'r') as file:
@@ -36,7 +44,8 @@ def read_file(name):
 def decode_file_contents(string):
     filename, file_content = string.split(":")
     size_of_content = len(file_content)
-    return filename, size_of_content, file_content
+    mid = len(file_content)//2
+    return filename, size_of_content, file_content[:mid], file_content[mid:]
     #filename = filename.strip("'")
     #file_content = file_content.strip("'")
 

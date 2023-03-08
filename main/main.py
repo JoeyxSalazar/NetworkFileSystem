@@ -7,6 +7,7 @@ Created on Feb 17, 2023
 import socket
 import hashlib 
 import time
+import mainhelp
 from DSMessage import DSMessage
 from DSComm import DSComm
 
@@ -14,7 +15,10 @@ current_user_hash = ''
 signed_in = False
 
 client = 50000
-storage = 51000
+ds1 = 51000
+ds2 = 51001
+ds3 = 51002
+ds4 = 51003
 
 def hash_string(string_to_hash):
     hash_obj = hashlib.sha256(string_to_hash.encode())
@@ -42,7 +46,7 @@ def receive_data(dbsock):
                 print()
                 return tipe, data
 
-def sign_in_success(credentials, clisock, dbsock):
+def sign_in_success(credentials, clisock):
     print('Login Success!')
     global current_user_hash
     current_user_hash = hash_string(credentials)
@@ -55,17 +59,17 @@ def sign_in_success(credentials, clisock, dbsock):
     '''Return to main protocol'''
     return
 
-def login(data, clisock, dbsock):
+def login(data, clisock):
     #print('Entered Login Protocol: ' + data)
     with open('userdb.txt', 'r') as file:
         for line in file:
             if data == line.rstrip():
-                sign_in_success(data, clisock, dbsock)
+                sign_in_success(data, clisock)
                 return
         send_data('Error Signing In', 'ERRO', clisock)
     
 
-def logout(data, clisock, dbsock):
+def logout(data, clisock):
     try:
         global current_user_hash
         current_user_hash = ''
@@ -77,34 +81,23 @@ def logout(data, clisock, dbsock):
         send_data('Error Logging Out', 'ERRO', clisock)
     return
 
-def menu(data, clisock, dbsock):
+def menu(data, clisock):
     with open('menu.txt', 'r') as file:
         contents = file.read()
         send_data(contents, 'OKOK' ,clisock)
     return
         
 
-def stor_file(data, clisock, dbsock):
+def stor_file(data, clisock, ds1, ds2, ds3, ds4):
     '''
         Data contains 'fname:filecontents'
     '''
-    #try:
-    #Split string into two parts, extract only the filename
-    parts = data.split(':')
-    dpath = parts[0]
-    dcontents = parts[1]
-    #if a full path was passed, we only need the name
-    if '/' in dpath:
-        pathparts = parts[0].split('/')
-        dname = pathparts[-1]
-    else:
-        dname = parts[0]
-
-    global current_user_hash
-    newdata = current_user_hash + dname + ':' + dcontents
-    send_data(newdata, 'STOR', dbsock)
-    status, message = receive_data(dbsock)
-    print('From DB\n\tStatus: ', status, '\t', 'Message: ', message)
+    #Extract data name, and data contents
+    dname, dcontents = mainhelp.split_file_path(data)
+    #Extract 4 equal parts from the content:
+    A, B, C, D = mainhelp.split_file_into_four(dcontents)
+    #Need to send parts to all 4 servers now, if all 4 accept, then continue
+    status = mainhelp.store_all_four(A, B, C, D, ds1, ds2, ds3, ds4)
     #Need to check if overwriting
     if status == 'OKOK':                   
         with open('userdb.txt','a+') as file:
@@ -122,7 +115,7 @@ def stor_file(data, clisock, dbsock):
     #except:
         #send_data('Couldn\'t communicate with dbserver', 'ERRO', clisock)
 
-def retr_file(fname,  clisock, dbsock):
+def retr_file(fname,  clisock, ds1 = None, ds2 = None, ds3 = None, ds4 = None):
     global current_user_hash
     name = current_user_hash + fname
     with open('userdb.txt','r') as file:
@@ -172,7 +165,7 @@ def dele_file(fname, clisock, dbsock):
         if not found_file:
             send_data('File doesn\'t exist', 'ERRO', clisock)
 
-def list_files(data, clisock, dbsock):
+def list_files(data, clisock):
     files = ''
     with open('userdb.txt','r') as file:
         for line in file:
@@ -183,30 +176,30 @@ def list_files(data, clisock, dbsock):
     else:
         send_data(files, 'OKOK', clisock)
 
-def decode_command(line, data, clisock, dbsock = None):
+def decode_command(line, data, clisock, ds1, ds2, ds3, ds4):
     if signed_in == False:
         if line != 'LGIN':
             send_data('Use \'LGIN\' to login first!','ERRO',clisock )
         else:
-            login(data, clisock, dbsock)
+            login(data, clisock)
     else:    
         if line == 'LGOT':
-            logout(data, clisock, dbsock)
+            logout(data, clisock)
         elif line == 'MENU':
-            menu(data, clisock, dbsock)
+            menu(data, clisock)
         elif line == 'STOR':
-            stor_file(data, clisock, dbsock)
+            stor_file(data, clisock, ds1, ds2, ds3, ds4)
         elif line == 'RETR':
-            retr_file(data, clisock, dbsock)
+            retr_file(data, clisock, ds1, ds2, ds3, ds4)
         elif line == 'DELE':
-            dele_file(data, clisock, dbsock)
+            dele_file(data, clisock, ds1, ds2, ds3, ds4)
         elif line == 'LIST':
-            list_files(data, clisock, dbsock)
+            list_files(data, clisock)
         else:
             send_data('Cant Decode','ERRO',clisock )
     return
         
-def main_protocol(clientsock, dbsock):
+def main_protocol(clientsock, ds1, ds2, ds3, ds4):
     comm = DSComm(clientsock)
     while True:
         print()
@@ -218,13 +211,18 @@ def main_protocol(clientsock, dbsock):
             data = mess.getData().decode('utf-8')
             print('\t','CMD: ',tipe)
             print('\t', 'DATA: ', data, '\n')
-            decode_command(tipe,data, clientsock, dbsock)
+            decode_command(tipe, data, clientsock, ds1, ds2, ds3, ds4)
 
 
 if __name__ == '__main__':
+    #Connect to DSservers
+    servers = [("localhost", ds1), ("localhost", ds2),("localhost", ds3),("localhost", ds4),]
+    onl_servers = mainhelp.ConnectionProtocol(servers)
+    '''
     #Connect to DBserver
     dbserv = socket.socket()
-    dbserv.connect(('localhost', storage))
+    dbserv.connect(('localhost', ds1))
+    '''
     #Allow for Client Connection
     clientserv = socket.socket()
     clientserv.bind(("localhost", client))
@@ -232,11 +230,12 @@ if __name__ == '__main__':
     while True:
         print('Listening on ', client)
         clientsock, raddr = clientserv.accept()
-        main_protocol(clientsock, dbserv)
+        main_protocol(clientsock, onl_servers['ds1'], onl_servers['ds2'], onl_servers['ds3'], onl_servers['ds4'])
         clientsock.close()
     clientserv.close()
-    dbserv.close()
-
+    for socket in onl_servers.values():
+        socket.close()
+    
 
 
     
