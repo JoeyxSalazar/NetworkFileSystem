@@ -103,8 +103,9 @@ def stor_file(data, clisock, ds1, ds2, ds3, ds4):
     global current_user_hash
     fname = current_user_hash + dname + ':'
     status = mainhelp.store_all_four(fname, A, B, C, D, ds1, ds2, ds3, ds4)
+    socks = [ds1, ds2, ds3, ds4]
     #Need to check if overwriting
-    if status == 'OKOK':                   
+    if status == 'OKOK' and all(socks):                   
         with open('userdb.txt','a+') as file:
             file.seek(0)
             for line in file:

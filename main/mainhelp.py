@@ -21,15 +21,7 @@ def ConnectionProtocol(ds_servers):
             online_servers['ds'+str(i)] = None
         i+=1
 
-    # Check how many servers were successfully connected to
-    if len(online_servers) == 4:
-        print("Successfully connected to all 4 servers")
-        return online_servers
-    elif len(online_servers) == 2:
-        print(f"Successfully connected to {len(online_servers)} servers: {online_servers}")
-        return online_servers
-    else:
-        print("Unable to connect")
+    return online_servers
 
 def split_file_into_four(file_string):
     part_len = math.ceil(len(file_string) / 4)
@@ -78,18 +70,21 @@ def XOR_parts(p1, p2, p3 = None):
     return result.decode('utf-8')
 
 def store_all_four(fname, A, B, C, D, ds1, ds2, ds3, ds4):
-    main.send_data((fname+A+B).encode('utf-8'), 'STOR', ds1)
-    stat1, d1 = main.receive_data(ds1)
+    socks = [ds1, ds2, ds3, ds4]
+    if all(socks):
+        main.send_data((fname+A+B).encode('utf-8'), 'STOR', ds1)
+        stat1, d1 = main.receive_data(ds1)
 
-    main.send_data((fname+C+D).encode('utf-8'), 'STOR', ds2)
-    stat2, d2 = main.receive_data(ds2)
+        main.send_data((fname+C+D).encode('utf-8'), 'STOR', ds2)
+        stat2, d2 = main.receive_data(ds2)
 
-    main.send_data((fname+XOR_parts(A,C) + XOR_parts(B, D)).encode('utf-8'), 'STOR', ds3)
-    stat3, d3 = main.receive_data(ds3)
+        main.send_data((fname+XOR_parts(A,C) + XOR_parts(B, D)).encode('utf-8'), 'STOR', ds3)
+        stat3, d3 = main.receive_data(ds3)
 
-    main.send_data((fname+XOR_parts(A, B, D) + XOR_parts(B, C)).encode('utf-8'), 'STOR', ds4)
-    stat4, d4 = main.receive_data(ds4)
-
+        main.send_data((fname+XOR_parts(A, B, D) + XOR_parts(B, C)).encode('utf-8'), 'STOR', ds4)
+        stat4, d4 = main.receive_data(ds4)
+    else:
+        return 'ERRO'
     if stat1 == 'OKOK' and stat2 == 'OKOK' and stat3 == 'OKOK' and stat4 == 'OKOK':
         return 'OKOK'
     else:
